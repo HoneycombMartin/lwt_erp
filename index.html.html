@@ -946,7 +946,20 @@ function _doSendToCEO() {
   var blob     = new Blob([json], { type: 'application/json' });
   _lastFilename = 'LWT_Entry_' + todayISO + '.json';
 
-  // Auto download the file
+  // ── Sync to Google Sheets automatically ──
+  var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz1_XAyc5p7eQhYc8uVNjwQGyZYkIr6VWWPAHQ19VkAGxyT0n0zR4YsgQ1bwG_tmEGXjQ/exec';
+  fetch(SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).then(function() {
+    toast('✅ Google Sheets-ல் சேமிக்கப்பட்டது!', '#27ae60');
+  }).catch(function() {
+    toast('⚠ Sheets sync failed — file downloaded', '#e67e22');
+  });
+
+  // Auto download the file as backup
   var url = URL.createObjectURL(blob);
   var a   = document.createElement('a');
   a.href  = url; a.download = _lastFilename;
