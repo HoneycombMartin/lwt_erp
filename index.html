@@ -832,7 +832,7 @@ function loadBDHistory() {
     var d = (r.date||'').split('-'); var ds = d.length===3?d[2]+'/'+d[1]+'/'+d[0]:r.date;
     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 8px;border-bottom:1px solid rgba(58,54,32,0.3);font-size:0.72rem;">'
       +'<div><span style="color:#f0c842;font-weight:700;">'+(r.cellSize||'15mm')+'</span> · '+(r.boards||r.boardsProduced||0)+' boards · '+escH(r.shift||'')+' · '+escH(r.machine||'')+'<br><span style="color:#9a9070;">'+ds+'</span></div>'
-      +'<button onclick="openEditModal('boardProductionLog',''+r.__id+'')" style="background:rgba(41,128,185,0.2);border:1px solid rgba(41,128,185,0.4);color:#5dade2;font-size:0.62rem;padding:3px 8px;border-radius:5px;cursor:pointer;white-space:nowrap;">✏ திருத்து</button>'
+      +'<button onclick="openEditModal("boardProductionLog","''+r.__id+'')" style="background:rgba(41,128,185,0.2);border:1px solid rgba(41,128,185,0.4);color:#5dade2;font-size:0.62rem;padding:3px 8px;border-radius:5px;cursor:pointer;white-space:nowrap;">✏ திருத்து</button>'
       +'</div>';
   }).join('');
 }
