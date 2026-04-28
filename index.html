@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>LWT Entry Screen</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { background: #0f0e0b; color: #e8e0c8; font-family: Arial, sans-serif; min-height: 100vh; }
+
+.header { background: #1a1810; border-bottom: 2px solid #d4a017; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
+.header-title { font-size: 1rem; font-weight: 800; color: #f0c842; }
+.header-date { font-size: 0.78rem; color: #f0c842; font-weight: 700; }
+
+.btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 20px 14px; }
+.main-btn { border: none; border-radius: 16px; padding: 26px 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.4); min-height: 130px; justify-content: center; width: 100%; }
+.main-btn:active { transform: scale(0.96); }
+.btn-green  { background: linear-gradient(145deg,#1a6b3a,#27ae60); }
+.btn-pink   { background: linear-gradient(145deg,#8b2252,#e91e8c); }
+.btn-yellow { background: linear-gradient(145deg,#7a6000,#d4a017); }
+.btn-blue   { background: linear-gradient(145deg,#1a4a7a,#2980b9); }
+.btn-icon { font-size: 2.2rem; }
+.btn-label { font-size: 0.95rem; font-weight: 800; color: #fff; text-align: center; line-height: 1.3; }
+.btn-sub { font-size: 0.6rem; color: rgba(255,255,255,0.75); text-align: center; }
+
+/* Modal */
+.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 999; overflow-y: auto; padding: 16px; }
+.modal.open { display: block; }
+.modal-box { background: #1a1810; border-radius: 16px; max-width: 500px; margin: 0 auto; overflow: hidden; }
+.modal-head { padding: 16px 18px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #3a3620; }
+.modal-title { font-size: 1rem; font-weight: 800; }
+.modal-close { background: #252318; border: 1px solid #3a3620; color: #e8e0c8; border-radius: 8px; padding: 6px 14px; font-size: 0.9rem; cursor: pointer; }
+.modal-body { padding: 16px; }
+
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 0.8rem; color: #f0c842; font-weight: 700; margin-bottom: 6px; }
+.field select, .field input { width: 100%; background: #252318; border: 1.5px solid #3a3620; color: #e8e0c8; font-size: 0.9rem; padding: 11px 12px; border-radius: 8px; outline: none; font-family: Arial,sans-serif; }
+.field select:focus, .field input:focus { border-color: #d4a017; }
+.field input.gold { border-color: #d4a017; color: #f0c842; font-weight: 800; font-size: 1.1rem; }
+
+.date-row { display: flex; gap: 8px; align-items: center; }
+.date-row input[type=text] { flex: 1; background: #252318; border: 1.5px solid #d4a017; color: #f0c842; font-size: 1rem; padding: 11px 12px; border-radius: 8px; outline: none; font-weight: 800; font-family: Arial,sans-serif; }
+.cal-wrap { position: relative; width: 44px; height: 44px; flex-shrink: 0; }
+.cal-icon { width: 44px; height: 44px; background: #3a3620; border: 1px solid #d4a017; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; pointer-events: none; }
+.cal-wrap input[type=date] { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; border: none; background: transparent; }
+
+.save-btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-size: 1rem; font-weight: 800; cursor: pointer; margin-top: 6px; color: #fff; font-family: Arial,sans-serif; }
+.save-green  { background: linear-gradient(135deg,#1a6b3a,#27ae60); }
+.save-pink   { background: linear-gradient(135deg,#8b2252,#e91e8c); }
+.save-yellow { background: linear-gradient(135deg,#7a6000,#d4a017); color: #1a1810; }
+.save-blue   { background: linear-gradient(135deg,#1a4a7a,#2980b9); }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.recent { margin: 0 14px; background: #141210; border: 1px solid #2a2618; border-radius: 10px; padding: 12px 14px; }
+.recent-title { font-size: 0.62rem; color: #9a9070; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; font-weight: 700; }
+.recent-row { font-size: 0.72rem; color: #c8b87a; padding: 5px 0; border-bottom: 1px solid #252318; display: flex; justify-content: space-between; align-items: center; }
+.recent-row:last-child { border-bottom: none; }
+.tag { font-size: 0.6rem; padding: 2px 8px; border-radius: 20px; font-weight: 700; }
+.tag-g { background:#1a4a2a; color:#27ae60; }
+.tag-p { background:#4a1a2a; color:#e91e8c; }
+.tag-y { background:#3a3000; color:#d4a017; }
+.tag-b { background:#1a2a4a; color:#2980b9; }
+
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px); background: #27ae60; color: #fff; padding: 12px 24px; border-radius: 30px; font-size: 0.88rem; font-weight: 700; z-index: 9999; transition: transform 0.3s, opacity 0.3s; opacity: 0; white-space: nowrap; box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+
+/* WhatsApp Export Button */
+.wa-export { margin: 14px 14px 6px; background: linear-gradient(145deg,#075e54,#25d366); border: none; border-radius: 14px; padding: 18px 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; width: calc(100% - 28px); box-shadow: 0 4px 16px rgba(37,211,102,0.3); }
+.wa-export:active { transform: scale(0.97); }
+.wa-export-icon { font-size: 1.8rem; }
+.wa-export-text { text-align: left; }
+.wa-export-label { font-size: 0.95rem; font-weight: 800; color: #fff; display: block; }
+.wa-export-sub { font-size: 0.62rem; color: rgba(255,255,255,0.75); display: block; }
+
+/* JSON Export Button */
+.json-export { margin: 4px 14px 6px; background: linear-gradient(145deg,#1a3a6a,#2980b9); border: none; border-radius: 14px; padding: 18px 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; width: calc(100% - 28px); box-shadow: 0 4px 16px rgba(41,128,185,0.3); }
+.json-export:active { transform: scale(0.97); }
+
+/* Previous Sales History */
+.prev-sales { margin-top: 18px; background: #0f0e0b; border: 1px solid #2a2618; border-radius: 10px; overflow: hidden; }
+.prev-sales-head { padding: 9px 12px; background: #1a2a3a; display: flex; justify-content: space-between; align-items: center; }
+.prev-sales-head span { font-size: 0.72rem; color: #2980b9; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+.prev-sales-head small { font-size: 0.6rem; color: #6a7a8a; }
+.prev-sales-filter { padding: 8px 12px; background: #111008; border-bottom: 1px solid #1a1810; }
+.prev-sales-filter select { width: 100%; background: #1a1810; border: 1px solid #2a3a4a; color: #c8d8e8; font-size: 0.75rem; padding: 6px 8px; border-radius: 6px; outline: none; }
+.prev-sale-row { padding: 8px 12px; border-bottom: 1px solid #1a1810; display: grid; grid-template-columns: 1fr auto; gap: 4px; cursor: pointer; transition: background 0.15s; }
+.prev-sale-row:last-child { border-bottom: none; }
+.prev-sale-row:hover, .prev-sale-row:active { background: #1a2a1a; }
+.prev-sale-left { display: flex; flex-direction: column; gap: 2px; }
+.prev-sale-cust { font-size: 0.75rem; color: #e8e0c8; font-weight: 700; }
+.prev-sale-detail { font-size: 0.65rem; color: #7a8a6a; }
+.prev-sale-right { text-align: right; display: flex; flex-direction: column; gap: 2px; align-items: flex-end; }
+.prev-sale-qty { font-size: 0.8rem; color: #f0c842; font-weight: 800; }
+.prev-sale-date { font-size: 0.6rem; color: #5a6a5a; }
+.prev-sale-amt { font-size: 0.65rem; color: #27ae60; font-weight: 700; }
+.no-history { padding: 14px 12px; text-align: center; color: #4a4a3a; font-size: 0.72rem; }
+.tap-hint { font-size: 0.58rem; color: #2a6a3a; text-align: center; padding: 5px; background: #0a1a0a; }
+
+/* Rate & GST fields */
+.calc-row { background: #0a1208; border: 1px solid #1a3a1a; border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; }
+.calc-row-title { font-size: 0.65rem; color: #27ae60; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+.calc-display { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+.calc-item { text-align: center; }
+.calc-item label { font-size: 0.58rem; color: #6a8a6a; display: block; margin-bottom: 2px; }
+.calc-item span { font-size: 0.82rem; font-weight: 800; color: #f0c842; }
+
+/* 3-Day Quick Picker */
+.day-picker { display:flex; gap:6px; margin-bottom:8px; }
+.day-btn { flex:1; padding:9px 4px; border-radius:8px; border:1.5px solid #3a3620; background:#1e1c13; color:#9a9070; font-size:0.72rem; font-weight:700; cursor:pointer; text-align:center; line-height:1.4; transition:all 0.15s; }
+.day-btn.sel { border-color:#d4a017; background:#2e2910; color:#f0c842; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">🍯 LWT Entry</div>
+    <div style="font-size:0.62rem;color:#9a9070;">Light Weight Technology</div>
+  </div>
+  <div class="header-date" id="todayBadge"></div>
+</div>
+
+<div class="btn-grid">
+  <button class="main-btn btn-green" onclick="openM('hc')">
+    <div class="btn-icon">📦</div>
+    <div class="btn-label">HC Core வரவு</div>
+    <div class="btn-sub">கச்சா பொருள்</div>
+  </button>
+  <button class="main-btn btn-pink" onclick="openM('bd')">
+    <div class="btn-icon">🪵</div>
+    <div class="btn-label">Board உற்பத்தி</div>
+    <div class="btn-sub">தினசரி உற்பத்தி</div>
+  </button>
+  <button class="main-btn btn-yellow" onclick="openM('buf')">
+    <div class="btn-icon">📐</div>
+    <div class="btn-label">Buffer பஞ்சிங்</div>
+    <div class="btn-sub">இயந்திர உற்பத்தி</div>
+  </button>
+  <button class="main-btn btn-blue" onclick="openM('dsp')">
+    <div class="btn-icon">🚚</div>
+    <div class="btn-label">Dispatch அனுப்புதல்</div>
+    <div class="btn-sub">பொருள் வெளியேற்றம்</div>
+  </button>
+</div>
+
+<div class="recent">
+  <div class="recent-title">கடைசியாக சேர்க்கப்பட்டவை</div>
+  <div id="recentList"><div style="color:#9a9070;font-size:0.72rem;">பதிவுகள் இல்லை</div></div>
+</div>
+
+<!-- HC CORE MODAL -->
+<div class="modal" id="m-hc">
+  <div class="modal-box">
+    <div class="modal-head" style="border-top:4px solid #27ae60;">
+      <div class="modal-title" style="color:#27ae60;">📦 HC Core வரவு</div>
+      <button class="modal-close" onclick="closeM('hc')">✕ மூடு</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>📅 தேதி</label>
+        <div class="day-picker" id="dp-hc"></div>
+        <input type="hidden" id="hc-date-val" value="">
+      </div>
+      <div class="field">
+        <label>📏 Cell அளவு</label>
+        <select id="hc-cell">
+          <option value="">-- தேர்வு --</option>
+          <option value="15mm">15mm Cell</option>
+          <option value="21mm">21mm Cell</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>📐 தடிமன் (Thickness)</label>
+        <select id="hc-thk" onchange="customOpt(this,'hc-thk-custom')">
+          <option value="">-- தேர்வு --</option>
+          <option>15 mm</option><option>20 mm</option><option>25 mm</option>
+          <option>30 mm</option><option>35 mm</option><option>40 mm</option>
+          <option>50 mm</option><option>60 mm</option><option>75 mm</option><option>100 mm</option>
+          <option value="__new__">➕ புதிய அளவு சேர்க்க...</option>
+        </select>
+        <input type="number" id="hc-thk-custom" placeholder="mm உள்ளிடவும்" style="display:none;margin-top:8px;">
+      </div>
+      <div class="field">
+        <label>📦 அளவு (RM)</label>
+        <input type="number" id="hc-qty" class="gold" placeholder="0.0" min="0" step="0.1">
+      </div>
+      <button class="save-btn save-green" onclick="saveHC()">✅ சேமி — HC Core வரவு</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOARD MODAL -->
+<div class="modal" id="m-bd">
+  <div class="modal-box">
+    <div class="modal-head" style="border-top:4px solid #e91e8c;">
+      <div class="modal-title" style="color:#e91e8c;">🪵 Board உற்பத்தி</div>
+      <button class="modal-close" onclick="closeM('bd')">✕ மூடு</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>📅 தேதி</label>
+        <div class="day-picker" id="dp-bd"></div>
+        <input type="hidden" id="bd-date-val" value="">
+      </div>
+      <div class="field">
+        <label>⏰ Shift</label>
+        <select id="bd-shift">
+          <option value="Shift 1 — Morning (9–1)">Shift 1 — காலை (9–1)</option>
+          <option value="Shift 2 — Afternoon (1:30–5:30)">Shift 2 — மதியம் (1:30–5:30)</option>
+          <option value="Shift 3 — Night">Shift 3 — இரவு</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>📏 Cell அளவு</label>
+        <select id="bd-cell" onchange="calcHC()">
+          <option value="15mm Cell — 3.3 RM/board">15mm Cell (3.3 RM/board)</option>
+          <option value="21mm Cell — 2.8 RM/board">21mm Cell (2.8 RM/board)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>📐 தடிமன் (mm)</label>
+        <input type="number" id="bd-thk" min="1">
+      </div>
+      <div class="field">
+        <label>🪵 Boards செய்தது <span style="color:#e74c3c;font-size:0.75rem;">← இங்கே எண்ணிக்கை டைப் செய்யவும்</span></label>
+        <input type="number" id="bd-boards" class="gold" min="1" inputmode="numeric" oninput="calcHC()" style="font-size:1.4rem;padding:14px 12px;">
+      </div>
+      <div class="field">
+        <label>🧮 HC Core பயன்படுத்தியது (RM) — தானாக</label>
+        <input type="number" id="bd-hccore" readonly style="background:#0f0e0b;color:#f0c842;border-color:#d4a017;font-weight:800;">
+      </div>
+      <button class="save-btn save-pink" onclick="saveBD()">✅ சேமி — Board உற்பத்தி</button>
+      <div style="margin-top:16px;border-top:1px solid #2a2618;padding-top:12px;">
+        <div style="font-size:0.68rem;color:#9a9070;font-weight:700;margin-bottom:8px;text-transform:uppercase;">📋 கடைசி பதிவுகள்</div>
+        <div id="bd-history-list" style="font-size:0.75rem;"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- BUFFER MODAL -->
+<div class="modal" id="m-buf">
+  <div class="modal-box">
+    <div class="modal-head" style="border-top:4px solid #d4a017;">
+      <div class="modal-title" style="color:#d4a017;">📐 Buffer பஞ்சிங்</div>
+      <button class="modal-close" onclick="closeM('buf')">✕ மூடு</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>📅 தேதி</label>
+        <div class="day-picker" id="dp-buf"></div>
+        <input type="hidden" id="buf-date-val" value="">
+      </div>
+      <div class="field">
+        <label>⏰ Shift</label>
+        <select id="buf-shift">
+          <option value="Shift 1 — Morning (9–1)">Shift 1 — காலை (9–1)</option>
+          <option value="Shift 2 — Afternoon (1:30–5:30)">Shift 2 — மதியம் (1:30–5:30)</option>
+          <option value="Shift 3 — Night">Shift 3 — இரவு</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>📦 Buffer வகை</label>
+        <select id="buf-type" onchange="customOpt(this,'buf-type-custom')">
+          <option value="">-- தேர்வு --</option>
+        </select>
+        <input type="text" id="buf-type-custom" placeholder="புதிய Buffer பெயர்" style="display:none;margin-top:8px;" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>✅ செய்தது (Pcs)</label>
+        <input type="number" id="buf-made" class="gold" min="1" inputmode="numeric" style="font-size:1.4rem;padding:14px 12px;">
+      </div>
+      <button class="save-btn save-yellow" onclick="saveBUF()">✅ சேமி — Buffer பஞ்சிங்</button>
+      <div style="margin-top:16px;border-top:1px solid #2a2618;padding-top:12px;">
+        <div style="font-size:0.68rem;color:#9a9070;font-weight:700;margin-bottom:8px;text-transform:uppercase;">📋 கடைசி பதிவுகள்</div>
+        <div id="buf-history-list" style="font-size:0.75rem;"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- DISPATCH MODAL -->
+<div class="modal" id="m-dsp">
+  <div class="modal-box">
+    <div class="modal-head" style="border-top:4px solid #2980b9;">
+      <div class="modal-title" style="color:#2980b9;">🚚 Dispatch அனுப்புதல்</div>
+      <button class="modal-close" onclick="closeM('dsp')">✕ மூடு</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>📅 தேதி</label>
+        <div class="day-picker" id="dp-dsp"></div>
+        <input type="hidden" id="dsp-date-val" value="">
+      </div>
+      <div class="field">
+        <label>🏢 வாடிக்கையாளர்</label>
+        <select id="dsp-cust" onchange="custOpt(this)">
+          <option value="">-- தேர்வு --</option>
+          <option>Butterfly Gandhimathi</option>
+          <option>Stanadyne India</option>
+          <option>Nefab India</option>
+          <option>MGM Varvel Power</option>
+          <option>Divine Foods</option>
+          <option>Poly Mak</option>
+          <option>KCIPL</option>
+          <option>Agilitive</option>
+          <option>Agrifacuture India</option>
+          <option value="__other__">➕ மற்றவர்கள் / Other...</option>
+        </select>
+        <input type="text" id="dsp-cust-custom" placeholder="வாடிக்கையாளர் பெயர்" style="display:none;margin-top:8px;" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>📦 Buffer வகை</label>
+        <select id="dsp-type" onchange="customOpt(this,'dsp-type-custom')">
+          <option value="">-- தேர்வு --</option>
+        </select>
+        <input type="text" id="dsp-type-custom" placeholder="புதிய Buffer பெயர்" style="display:none;margin-top:8px;" autocomplete="off">
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label>🔢 அளவு (Qty)</label>
+          <input type="number" id="dsp-qty" class="gold" placeholder="0" min="0" oninput="calcDSP()">
+        </div>
+        <div class="field">
+          <label>💰 Rate / pc (₹)</label>
+          <input type="number" id="dsp-rate" class="gold" placeholder="0.00" min="0" step="0.01" oninput="calcDSP()">
+        </div>
+      </div>
+      <div class="calc-row" id="dsp-calc-row" style="display:none;">
+        <div class="calc-row-title">💹 தானியங்கி கணக்கு — Auto Calculation</div>
+        <div class="calc-display">
+          <div class="calc-item"><label>Taxable ₹</label><span id="dsp-taxable">—</span></div>
+          <div class="calc-item"><label>GST 18% ₹</label><span id="dsp-gst">—</span></div>
+          <div class="calc-item"><label>Grand Total ₹</label><span id="dsp-grand" style="color:#27ae60;">—</span></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>🧾 Invoice No.</label>
+        <input type="text" id="dsp-inv" placeholder="INV-001" autocomplete="off">
+      </div>
+      <button class="save-btn save-blue" onclick="saveDSP()">✅ சேமி — Dispatch</button>
+
+      <!-- Previous Sales History -->
+      <div class="prev-sales">
+        <div class="prev-sales-head">
+          <span>📋 முந்தைய விற்பனை — Previous Sales</span>
+          <small id="dsp-hist-count"></small>
+        </div>
+        <div class="prev-sales-filter">
+          <select id="dsp-hist-filter" onchange="renderDspHistory()">
+            <option value="">அனைவரும் — All Customers</option>
+          </select>
+        </div>
+        <div id="dsp-history-list"><div class="no-history">📭 பதிவுகள் இல்லை</div></div>
+        <div class="tap-hint">👆 ஒரு row தட்டினால் — Tap a row to auto-fill the form</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ONE TAP SEND TO CEO -->
+<button class="wa-export" onclick="sendToCEO()" style="background:linear-gradient(145deg,#1a5276,#2980b9);box-shadow:0 4px 16px rgba(41,128,185,0.4);">
+  <div class="wa-export-icon">🚀</div>
+  <div class="wa-export-text">
+    <span class="wa-export-label">CEO-க்கு அனுப்பு — Send to CEO</span>
+    <span class="wa-export-sub">One tap → WhatsApp + ERP file — அனைத்து பதிவுகளும்</span>
+  </div>
+</button>
+
+<!-- Import confirmation popup -->
+<div id="sendModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:99998;align-items:center;justify-content:center;flex-direction:column;">
+  <div style="background:#1a1810;border:2px solid #2980b9;border-radius:16px;padding:28px 24px;width:88%;max-width:340px;text-align:center;">
+    <div style="font-size:2.5rem;margin-bottom:8px;">✅</div>
+    <div style="font-family:sans-serif;font-weight:800;font-size:1rem;color:#2ecc71;margin-bottom:8px;">File Ready!</div>
+    <div style="font-size:0.75rem;color:#9a9070;margin-bottom:20px;" id="sendModalMsg">JSON file downloaded. Now share it to CEO via WhatsApp.</div>
+    <button onclick="openWhatsApp()" style="width:100%;background:linear-gradient(145deg,#075e54,#25d366);border:none;border-radius:10px;padding:14px;color:#fff;font-size:0.95rem;font-weight:800;font-family:sans-serif;cursor:pointer;margin-bottom:10px;">
+      📱 Open WhatsApp → Send to CEO
+    </button>
+    <button onclick="document.getElementById('sendModal').style.display='none'" style="width:100%;background:transparent;border:1px solid #3a3620;border-radius:10px;padding:10px;color:#9a9070;font-size:0.75rem;cursor:pointer;">
+      Close
+    </button>
+  </div>
+</div>
+
+<!-- PIN Modal -->
+<div id="pinModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:99999;align-items:center;justify-content:center;flex-direction:column;">
+  <div style="background:#1a1810;border:2px solid #d4a017;border-radius:16px;padding:28px 24px;width:88%;max-width:340px;text-align:center;">
+    <div style="font-size:2rem;margin-bottom:6px;">🔐</div>
+    <div style="font-family:sans-serif;font-weight:800;font-size:1rem;color:#f0c842;margin-bottom:4px;">PIN உள்ளிடவும்</div>
+    <div id="pinModalSub" style="font-size:0.68rem;color:#9a9070;margin-bottom:18px;">Enter your 6-digit Supervisor PIN</div>
+    <!-- PIN dots display -->
+    <div style="display:flex;justify-content:center;gap:10px;margin-bottom:20px;" id="pinDots">
+      <div class="pin-dot" id="pd0"></div>
+      <div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div>
+      <div class="pin-dot" id="pd3"></div>
+      <div class="pin-dot" id="pd4"></div>
+      <div class="pin-dot" id="pd5"></div>
+    </div>
+    <!-- Keypad -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;" id="pinPad">
+      <button class="pin-key" ontouchend="e=event;e.preventDefault();pinKey('1')" onclick="pinKey('1')">1</button>
+      <button class="pin-key" ontouchend="e=event;e.preventDefault();pinKey('2')" onclick="pinKey('2')">2</button>
+      <button class="pin-key" ontouchend="e=event;e.preventDefault();pinKey('3')" onclick="pinKey('3')">3</button>
+      <button class="pin-key" ontouchend="e=event;e.preventDefault();pinKey('4')" onclick="pinKey('4')">4</button>
+      <button class="pin-key" ontouchend="e=event;e.preventDefault();pinKey('5')" onclick="pinKey('5')">5</button>
+      <button class="pin-key" ontouchend="e=event;e.preventDefault();pinKey('6')" onclick="pinKey('6')">6</button>
+      <button class="pin-key" ontouchend="e=event;e.preventDefault();pinKey('7')" onclick="pinKey('7')">7</button>
+      <button class="pin-key" ontouchend="e=event;e.preventDefault();pinKey('8')" onclick="pinKey('8')">8</button>
+      <button class="pin-key" ontouchend="e=event;e.preventDefault();pinKey('9')" onclick="pinKey('9')">9</button>
+      <button class="pin-key pin-clear" ontouchend="e=event;e.preventDefault();pinClear()" onclick="pinClear()">✕</button>
+      <button class="pin-key" ontouchend="e=event;e.preventDefault();pinKey('0')" onclick="pinKey('0')">0</button>
+      <button class="pin-key pin-del" ontouchend="e=event;e.preventDefault();pinDel()" onclick="pinDel()">⌫</button>
+    </div>
+    <div id="pinError" style="color:#e74c3c;font-size:0.72rem;min-height:18px;margin-bottom:8px;"></div>
+    <button onclick="pinCancel()" style="background:transparent;border:1px solid #3a3620;color:#9a9070;font-size:0.72rem;padding:8px 20px;border-radius:8px;cursor:pointer;width:100%;">Cancel</button>
+  </div>
+</div>
+
+<style>
+.pin-dot { width:14px;height:14px;border-radius:50%;border:2px solid #d4a017;background:transparent;transition:background 0.15s; }
+.pin-dot.filled { background:#d4a017; }
+.pin-key { background:#252318;border:1px solid #3a3620;color:#e8e0c8;font-size:1.3rem;font-weight:700;padding:14px;border-radius:10px;cursor:pointer;transition:background 0.1s;font-family:monospace;touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;min-height:56px;min-width:56px; }
+.pin-key:active { background:#3a3620; }
+.pin-clear { color:#e74c3c;border-color:#3a1a1a; }
+.pin-del { color:#f0c842; }
+</style>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Helpers ──
+function gid(id) { return document.getElementById(id); }
+function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
+function getLS(k) { try { return JSON.parse(localStorage.getItem(k)||'[]'); } catch(e){ return []; } }
+function setLS(k,v) { localStorage.setItem(k, JSON.stringify(v)); }
+function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function toast(msg, col) {
+  var t = gid('toast');
+  t.textContent = msg;
+  t.style.background = col||'#27ae60';
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2800);
+}
+
+// ── 3-Day Picker ──
+function getDays() {
+  var out = [], labels = ['இன்று','நேற்று','முந்தைய'];
+  for (var i = 0; i < 3; i++) {
+    var d = new Date(); d.setDate(d.getDate() - i);
+    var dd   = String(d.getDate()).padStart(2,'0');
+    var mm   = String(d.getMonth()+1).padStart(2,'0');
+    var yyyy = d.getFullYear();
+    out.push({ iso: yyyy+'-'+mm+'-'+dd, short: dd+'/'+mm, label: labels[i] });
+  }
+  return out;
+}
+
+function initPicker(name, selIdx) {
+  selIdx = selIdx || 0;
+  var days = getDays();
+  var el = gid('dp-'+name);
+  if (!el) return;
+  el.innerHTML = days.map(function(d, i) {
+    return '<button type="button" class="day-btn'+(i===selIdx?' sel':'')+'" data-name="'+name+'" data-idx="'+i+'" onclick="pickDay(this.dataset.name,+this.dataset.idx)">'+d.label+'<br><b>'+d.short+'</b></button>';
+  }).join('');
+  setDateVal(name, days[selIdx].iso);
+}
+
+function pickDay(name, idx) {
+  var days = getDays();
+  var el = gid('dp-'+name);
+  if (!el) return;
+  el.querySelectorAll('.day-btn').forEach(function(b, i){ b.className = 'day-btn'+(i===idx?' sel':''); });
+  setDateVal(name, days[idx].iso);
+}
+
+function setDateVal(name, iso) {
+  var el = gid(name+'-date-val');
+  if (el) el.value = iso;
+}
+
+function getDateVal(name) {
+  var el = gid(name+'-date-val');
+  return el ? el.value : '';
+}
+
+// ── Modal ──
+function openM(name) {
+  initPicker(name, 0);
+  if (name==='buf') { loadBufTypes('buf-type'); setTimeout(function(){ loadBUFHistory(); }, 100); }
+  if (name==='dsp') { loadBufTypes('dsp-type'); loadDspHistory(); }
+  if (name==='bd')  { loadBDHistory(); }
+  if (name==='buf') { loadBUFHistory(); }
+  gid('m-'+name).classList.add('open');
+}
+
+function closeM(name) {
+  gid('m-'+name).classList.remove('open');
+}
+
+document.querySelectorAll('.modal').forEach(function(m) {
+  m.addEventListener('click', function(e) {
+    if (e.target === m) m.classList.remove('open');
+  });
+});
+
+// ── Dropdowns ──
+function customOpt(sel, customId) {
+  var c = gid(customId);
+  if (sel.value === '__new__') { c.style.display='block'; c.focus(); }
+  else { c.style.display='none'; c.value=''; }
+}
+function custOpt(sel) {
+  var c = gid('dsp-cust-custom');
+  if (sel.value === '__other__') { c.style.display='block'; c.focus(); }
+  else { c.style.display='none'; c.value=''; }
+}
+function getSelVal(selId, customId) {
+  var sel = gid(selId);
+  if (sel.value === '__new__' || sel.value === '__other__') {
+    return (gid(customId).value||'').trim();
+  }
+  return sel.value;
+}
+
+// ── Buffer Types ──
+var LWT_STD_BUFS = ['Corner Buffer','Bottom Buffer','Top Buffer','Front Buffer','Back Buffer','Inner Buffer','Side Buffer','Custom Buffer'];
+function loadBufTypes(selId) {
+  var sel = gid(selId); if (!sel) return;
+  var bm = getLS('lwt_bufferMaster');
+  var names = LWT_STD_BUFS.slice();
+  bm.forEach(function(b){ var n=(b.name||b.bufferName||'').trim(); if(n && names.indexOf(n)<0) names.push(n); });
+  var cur = sel.value;
+  sel.innerHTML = '<option value="">-- தேர்வு --</option>' +
+    names.map(function(n){ return '<option value="'+escH(n)+'"'+(n===cur?' selected':'')+'>'+escH(n)+'</option>'; }).join('') +
+    '<option value="__new__">+ புதிய வகை</option>';
+}
+
+function addBufTypeIfNew(name) {
+  if (!name || LWT_STD_BUFS.indexOf(name) >= 0) return;
+  var bm = getLS('lwt_bufferMaster');
+  if (!bm.some(function(b){ return (b.name||b.bufferName||'')=== name; })) {
+    bm.push({__id:uid(), name:name, bufferName:name, createdAt:new Date().toISOString()});
+    setLS('lwt_bufferMaster', bm);
+  }
+}
+
+// ── Recent Activity ──
+var recentList = [];
+function addRecent(type, label, date) {
+  var tags  = {hc:'tag-g', bd:'tag-p', buf:'tag-y', dsp:'tag-b'};
+  var names = {hc:'HC Core', bd:'Board', buf:'Buffer', dsp:'Dispatch'};
+  var dd = (date||'').split('-').reverse().join('/');
+  recentList.unshift({type:type, label:label, date:dd, cls:tags[type], name:names[type]});
+  if (recentList.length > 6) recentList.pop();
+  var el = gid('recentList');
+  if (!el) return;
+  el.innerHTML = recentList.map(function(r){
+    return '<div class="recent-row"><span>'+escH(r.label)+' <span style="color:#6a8050;font-size:0.65rem;">'+r.date+'</span></span><span class="tag '+r.cls+'">'+r.name+'</span></div>';
+  }).join('');
+}
+
+// ── PIN ──
+var PIN_KEY = 'lwt_entry_pins';
+var _sessionUnlocked = false;
+var _pinForSend  = false;
+var _pinBuffer   = '';
+var _pinCallback = null;
+var _pinAttempts = 0;
+
+function getPINs() {
+  try {
+    var p = JSON.parse(localStorage.getItem(PIN_KEY)||'null');
+    if (p && p.s1 && p.s2 && p.master) return p;
+  } catch(e) {}
+  var defaults = { s1:'112233', s2:'445566', master:'786786' };
+  localStorage.setItem(PIN_KEY, JSON.stringify(defaults));
+  return defaults;
+}
+
+function requirePIN(label, cb) {
+  if (_sessionUnlocked && !_pinForSend) { cb(); return; }
+  _pinForSend = false; _pinBuffer = ''; _pinCallback = cb; _pinAttempts = 0;
+  gid('pinError').textContent = '';
+  gid('pinModalSub').textContent = label + ' — 6-digit PIN உள்ளிடவும்';
+  updatePinDots();
+  gid('pinModal').style.display = 'flex';
+}
+
+function requirePINAlways(label, cb) { _pinForSend = true; requirePIN(label, cb); }
+
+function pinKey(d) {
+  if (_pinBuffer.length >= 6) return;
+  _pinBuffer += d;
+  updatePinDots();
+  if (_pinBuffer.length === 6) {
+    setTimeout(function() {
+      var pins = getPINs();
+      if (_pinBuffer === pins.s1 || _pinBuffer === pins.s2 || _pinBuffer === pins.master) {
+        gid('pinError').textContent = '';
+        gid('pinModal').style.display = 'none';
+        _pinBuffer = ''; _sessionUnlocked = true;
+        updatePinDots();
+        var si = gid('sessionStatus');
+        if (si) si.innerHTML = '🔓 Session active';
+        if (_pinCallback) _pinCallback();
+        _pinCallback = null;
+      } else {
+        _pinAttempts++;
+        _pinBuffer = '';
+        updatePinDots();
+        if (_pinAttempts >= 3) {
+          gid('pinError').textContent = '🔒 Too many attempts. Wait 30s.';
+          gid('pinModal').style.display = 'none';
+          setTimeout(function(){ _pinAttempts = 0; }, 30000);
+        } else {
+          gid('pinError').textContent = '❌ Wrong PIN. '+(3-_pinAttempts)+' left.';
+        }
+      }
+    }, 80);
+  }
+}
+
+function pinDel() {
+  _pinBuffer = _pinBuffer.slice(0, -1);
+  updatePinDots();
+}
+
+function pinCancel() {
+  gid('pinModal').style.display = 'none';
+  _pinBuffer = ''; _pinCallback = null;
+  updatePinDots();
+}
+
+function updatePinDots() {
+  for (var i = 1; i <= 6; i++) {
+    var dot = gid('dot'+i);
+    if (dot) dot.classList.toggle('filled', i <= _pinBuffer.length);
+  }
+}
+
+// ── isWithin3Days ──
+function isWithin3Days(dateStr) {
+  if (!dateStr) return false;
+  var iso = dateStr.includes('/') ? (function(){ var p=dateStr.split('/'); return p[2]+'-'+p[1]+'-'+p[0]; })() : dateStr;
+  var diff = (new Date() - new Date(iso)) / 86400000;
+  return diff >= 0 && diff <= 3;
+}
+
+// ══════════════════════════
+// HC CORE
+// ══════════════════════════
+function saveHC() { _saveHC(); }
+function _saveHC() {
+  var date = getDateVal('hc');
+  var cell = gid('hc-cell').value;
+  var thk  = gid('hc-thk').value;
+  var qty  = parseFloat(gid('hc-qty').value)||0;
+  var rate = parseFloat(gid('hc-rate').value)||0;
+  if (!date) { toast('⚠ தேதி தேர்வு செய்யவும்','#e74c3c'); return; }
+  if (!cell) { toast('⚠ Cell அளவு தேர்வு செய்யவும்','#e74c3c'); return; }
+  if (qty<=0){ toast('⚠ அளவு உள்ளிடவும்','#e74c3c'); return; }
+  var inv = getLS('inventory');
+  var match = inv.filter(function(r){ return r.category==='HC Core' && r.cellSize===cell && r.thickness===thk; });
+  var bal = match.length ? (parseFloat(match[match.length-1].balance)||0) : 0;
+  inv.push({__id:uid(), date:date, item:'HC Core', category:'HC Core', txnType:'Purchase IN',
+    cellSize:cell, thickness:thk, inQty:qty, outQty:0, balance:parseFloat((bal+qty).toFixed(2)),
+    unitRate:rate, createdAt:new Date().toISOString(), createdBy:'Entry Screen'});
+  setLS('inventory', inv);
+  addRecent('hc', qty+' RM '+cell, date);
+  gid('hc-qty').value=''; gid('hc-rate').value='';
+  gid('hc-cell').selectedIndex=0; gid('hc-thk').selectedIndex=0;
+  toast('✅ HC Core சேமிக்கப்பட்டது! '+qty+' RM added.','#27ae60');
+  setTimeout(function(){ closeM('hc'); renderRecent(); }, 1200);
+}
+
+// ══════════════════════════
+// BOARD PRODUCTION
+// ══════════════════════════
+function calcHC() {
+  var boards = parseFloat(gid('bd-boards').value)||0;
+  var cell   = (gid('bd-cell').value||'').includes('21') ? '21mm' : '15mm';
+  var rm     = cell==='21mm' ? 2.8 : 3.3;
+  gid('bd-hccore').value = boards>0 ? (boards*rm).toFixed(1) : '';
+}
+
+function saveBD() {
+  var date   = getDateVal('bd');
+  var shift  = gid('bd-shift').value;
+  var cell   = (gid('bd-cell').value||'').includes('21') ? '21mm' : '15mm';
+  var thk    = parseFloat(gid('bd-thk').value)||0;
+  var boards = parseFloat(gid('bd-boards').value)||0;
+  var hcused = parseFloat(gid('bd-hccore').value)||0;
+  if (!date)    { toast('⚠ தேதி தேர்வு செய்யவும்','#e74c3c'); return; }
+  if (boards<=0){ toast('⚠ Boards எண்ணிக்கை உள்ளிடவும்','#e74c3c'); return; }
+  var log = getLS('boardProductionLog');
+  log.push({__id:uid(), date:date, shift:shift, cellSize:cell, thickness:thk,
+    boards:boards, boardsMade:boards, pcsProduced:boards, hcCoreUsed:hcused,
+    createdAt:new Date().toISOString(), createdBy:'Entry Screen'});
+  setLS('boardProductionLog', log);
+  addRecent('bd', boards+' Boards — '+shift.split('—')[0].trim(), date);
+  gid('bd-boards').value=''; gid('bd-thk').value=''; gid('bd-hccore').value='';
+  toast('✅ Board உற்பத்தி சேமிக்கப்பட்டது!','#e91e8c');
+  setTimeout(function(){ closeM('bd'); renderRecent(); }, 1200);
+}
+
+function loadBDHistory() {
+  var el = gid('bd-history-list'); if (!el) return;
+  var log = getLS('boardProductionLog').filter(function(r){ return isWithin3Days(r.date||''); });
+  log.sort(function(a,b){ return (b.date||'')>(a.date||'')?1:-1; });
+  if (!log.length) { el.innerHTML='<div style="color:#4a4a3a;padding:6px;font-size:0.72rem;">பதிவுகள் இல்லை</div>'; return; }
+  el.innerHTML = log.map(function(r) {
+    var ds = (r.date||'').split('-').reverse().join('/');
+    var sh = (r.shift||'').replace('Shift 1','S1').replace('Shift 2','S2').replace('Shift 3','S3');
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 4px;border-bottom:1px solid #2a2618;">'
+      +'<div style="font-size:0.72rem;"><span style="color:#f0c842;font-weight:800;">'+(r.boards||0)+' Boards</span>'
+      +' · <span style="color:#e8e0c8;">'+(r.cellSize||'15mm')+'</span>'
+      +' · <span style="color:#5dade2;">'+sh+'</span>'
+      +'<br><span style="color:#6a6a5a;">'+ds+'</span></div>'
+      +'<button data-key="boardProductionLog" data-id="'+r.__id+'" onclick="openEdit(this.dataset.key,this.dataset.id)"'
+      +' style="background:rgba(41,128,185,0.2);border:1px solid rgba(41,128,185,0.4);color:#5dade2;font-size:0.65rem;padding:5px 10px;border-radius:6px;cursor:pointer;flex-shrink:0;">✏ திருத்து</button>'
+      +'</div>';
+  }).join('');
+}
+
+// ══════════════════════════
+// BUFFER PUNCHING
+// ══════════════════════════
+function saveBUF() {
+  var date  = getDateVal('buf');
+  var shift = gid('buf-shift').value;
+  var btype = getSelVal('buf-type','buf-type-custom');
+  var made  = parseFloat(gid('buf-made').value)||0;
+  if (!date)  { toast('⚠ தேதி தேர்வு செய்யவும்','#e74c3c'); return; }
+  if (!btype) { toast('⚠ Buffer வகை தேர்வு செய்யவும்','#e74c3c'); return; }
+  if (made<=0){ toast('⚠ Pcs அளவு உள்ளிடவும்','#e74c3c'); return; }
+  addBufTypeIfNew(btype);
+  var log = getLS('buffersMachineLog');
+  log.push({__id:uid(), date:date, shift:shift, bufferType:btype, bufferName:btype,
+    pcsProduced:made, todayMade:made, pcsDispatch:0, stockPcs:made,
+    createdAt:new Date().toISOString(), createdBy:'Entry Screen'});
+  setLS('buffersMachineLog', log);
+  addRecent('buf', btype+' — '+made+' pcs', date);
+  gid('buf-made').value='';
+  gid('buf-type').value=''; gid('buf-type-custom').style.display='none'; gid('buf-type-custom').value='';
+  toast('✅ Buffer பஞ்சிங் சேமிக்கப்பட்டது!','#d4a017');
+  setTimeout(function(){ closeM('buf'); renderRecent(); }, 1200);
+}
+
+function loadBUFHistory() {
+  var el = gid('buf-history-list'); if (!el) return;
+  var log = getLS('buffersMachineLog').filter(function(r){ return isWithin3Days(r.date||''); });
+  log.sort(function(a,b){ return (b.date||'')>(a.date||'')?1:-1; });
+  if (!log.length) { el.innerHTML='<div style="color:#4a4a3a;padding:6px;font-size:0.72rem;">பதிவுகள் இல்லை</div>'; return; }
+  el.innerHTML = log.map(function(r) {
+    var ds = (r.date||'').split('-').reverse().join('/');
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 4px;border-bottom:1px solid #2a2618;">'
+      +'<div style="font-size:0.72rem;"><span style="color:#f0c842;font-weight:800;">'+escH(r.bufferType||'')+'</span>'
+      +' · <span style="color:#e8e0c8;">'+(r.pcsProduced||0)+' pcs</span>'
+      +'<br><span style="color:#6a6a5a;">'+ds+'</span></div>'
+      +'<button data-key="buffersMachineLog" data-id="'+r.__id+'" onclick="openEdit(this.dataset.key,this.dataset.id)"'
+      +' style="background:rgba(41,128,185,0.2);border:1px solid rgba(41,128,185,0.4);color:#5dade2;font-size:0.65rem;padding:5px 10px;border-radius:6px;cursor:pointer;flex-shrink:0;">✏ திருத்து</button>'
+      +'</div>';
+  }).join('');
+}
+
+// ══════════════════════════
+// DISPATCH
+// ══════════════════════════
+function calcDSP() {
+  var qty  = parseFloat(gid('dsp-qty').value)||0;
+  var rate = parseFloat(gid('dsp-rate').value)||0;
+  var row  = gid('dsp-calc-row');
+  if (!row) return;
+  if (qty>0 && rate>0) {
+    var tax=parseFloat((qty*rate).toFixed(2)), gst=parseFloat((tax*0.18).toFixed(2)), tot=parseFloat((tax+gst).toFixed(2));
+    gid('dsp-taxable').textContent='₹'+tax; gid('dsp-gst').textContent='₹'+gst; gid('dsp-total').textContent='₹'+tot;
+    row.style.display='flex';
+  } else { row.style.display='none'; }
+}
+
+function saveDSP() { _saveDSP(); }
+function _saveDSP() {
+  var date  = getDateVal('dsp');
+  var cust  = getSelVal('dsp-cust','dsp-cust-custom');
+  var btype = getSelVal('dsp-type','dsp-type-custom');
+  var qty   = parseFloat(gid('dsp-qty').value)||0;
+  var rate  = parseFloat(gid('dsp-rate').value)||0;
+  var inv   = (gid('dsp-inv').value||'').trim();
+  if (!date)  { toast('⚠ தேதி தேர்வு செய்யவும்','#e74c3c'); return; }
+  if (!cust)  { toast('⚠ வாடிக்கையாளர் தேர்வு செய்யவும்','#e74c3c'); return; }
+  if (!btype) { toast('⚠ Buffer வகை தேர்வு செய்யவும்','#e74c3c'); return; }
+  if (qty<=0) { toast('⚠ அளவு உள்ளிடவும்','#e74c3c'); return; }
+  var tax=rate>0?parseFloat((qty*rate).toFixed(2)):0, gst=rate>0?parseFloat((tax*0.18).toFixed(2)):0, tot=rate>0?parseFloat((tax+gst).toFixed(2)):0;
+  var log = getLS('lwt_dispatchLog');
+  log.push({__id:uid(), dispatchDate:date, customer:cust, bufferName:btype, bufferType:btype,
+    qtyDispatched:qty, rate:rate, taxableAmount:tax, gstAmount:gst, grandTotal:tot,
+    invoiceNumber:inv, createdAt:new Date().toISOString(), createdBy:'Entry Screen'});
+  setLS('lwt_dispatchLog', log);
+  addRecent('dsp', cust+' — '+btype+' ×'+qty, date);
+  gid('dsp-qty').value=''; gid('dsp-rate').value=''; gid('dsp-inv').value='';
+  gid('dsp-cust').value=''; gid('dsp-cust-custom').style.display='none'; gid('dsp-cust-custom').value='';
+  gid('dsp-type').value=''; gid('dsp-type-custom').style.display='none'; gid('dsp-type-custom').value='';
+  var row=gid('dsp-calc-row'); if(row) row.style.display='none';
+  toast('✅ Dispatch சேமிக்கப்பட்டது!','#2980b9');
+  setTimeout(function(){ renderRecent(); }, 1200);
+  loadDspHistory();
+}
+
+function loadDspHistory() {
+  var sel = gid('dsp-hist-filter'); if (!sel) return;
+  var log = getLS('lwt_dispatchLog');
+  var custs = [];
+  log.forEach(function(r){ if(r.customer && custs.indexOf(r.customer)<0) custs.push(r.customer); });
+  var existing = Array.from(sel.options).map(function(o){ return o.value; });
+  custs.forEach(function(c){ if(existing.indexOf(c)<0){ var o=document.createElement('option'); o.value=c; o.textContent=c; sel.appendChild(o); } });
+  renderDspHistory();
+}
+
+var _dspFiltered = [];
+function renderDspHistory() {
+  var sel = gid('dsp-hist-filter'); if (!sel) return;
+  var el  = gid('dsp-history-list'); if (!el) return;
+  var filter = sel.value;
+  var log = getLS('lwt_dispatchLog');
+  log.sort(function(a,b){ return (b.dispatchDate||'')>(a.dispatchDate||'')?1:-1; });
+  var filtered = filter ? log.filter(function(r){ return r.customer===filter; }) : log;
+  _dspFiltered = filtered;
+  if (!filtered.length) { el.innerHTML='<div class="no-history">📭 பதிவுகள் இல்லை</div>'; return; }
+  el.innerHTML = filtered.slice(0,20).map(function(r, i) {
+    var ds=(r.dispatchDate||'').split('-').reverse().join('/');
+    return '<div class="prev-sale-row" style="cursor:pointer;padding:8px;border-bottom:1px solid #252318;" data-idx="'+i+'" onclick="fillDspFromHistory(+this.dataset.idx)">'
+      +'<div style="font-size:0.75rem;"><b style="color:#f0c842;">'+escH(r.bufferName||'')+'</b>'
+      +' · '+escH(r.customer||'')
+      +' · <span style="color:#9a9070;">'+ds+'</span></div>'
+      +'<div style="font-size:0.68rem;color:#9a9070;">'+r.qtyDispatched+' pcs'+(r.rate?' @ ₹'+r.rate:'')+'</div></div>';
+  }).join('');
+}
+
+function fillDspFromHistory(idx) {
+  try {
+    var r = _dspFiltered[idx]; if (!r) return;
+    var cs=gid('dsp-cust'); if(cs){ cs.value=r.customer||''; }
+    var ts=gid('dsp-type'); if(ts){ ts.value=r.bufferName||r.bufferType||''; }
+    var qs=gid('dsp-qty');  if(qs){ qs.value=r.qtyDispatched||''; }
+    var rs=gid('dsp-rate'); if(rs){ rs.value=r.rate||''; }
+    calcDSP();
+  } catch(e){ console.log(e); }
+}
+
+// ══════════════════════════
+// EDIT MODAL
+// ══════════════════════════
+var _ek='', _eid='';
+
+function openEdit(key, id) {
+  var data = getLS(key);
+  var rec  = data.find(function(r){ return r.__id===id; });
+  if (!rec) { toast('⚠ பதிவு கிடைக்கவில்லை!','#e74c3c'); return; }
+  _ek=key; _eid=id;
+  var em = gid('editModal'); if (!em) return;
+  var S = 'width:100%;background:#252318;border:1.5px solid #3a3620;color:#e8e0c8;font-size:0.88rem;padding:10px;border-radius:8px;outline:none;margin-bottom:10px;font-family:Arial,sans-serif;box-sizing:border-box;';
+  var L = 'display:block;font-size:0.72rem;color:#f0c842;font-weight:700;margin-bottom:4px;';
+  var fmtD = function(d){ if(!d) return ''; if(d.includes('/')) return d; var p=d.split('-'); return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:d; };
+  var body='', title='';
+  if (key==='boardProductionLog') {
+    title='✏ Board உற்பத்தி திருத்து';
+    body='<label style="'+L+'">📅 தேதி (dd/mm/yyyy)</label><input id="ed_date" style="'+S+'" value="'+fmtD(rec.date||'')+'"><label style="'+L+'">⚙ Shift</label><select id="ed_shift" style="'+S+'"><option value="Shift 1 — Morning (9–1)"'+(rec.shift&&rec.shift.includes('Shift 1')?' selected':'')+'>S1 — காலை</option><option value="Shift 2 — Afternoon (1:30–5:30)"'+(rec.shift&&rec.shift.includes('Shift 2')?' selected':'')+'>S2 — மதியம்</option><option value="Shift 3 — Night"'+(rec.shift&&rec.shift.includes('Shift 3')?' selected':'')+'>S3 — இரவு</option></select><label style="'+L+'">🔢 Boards</label><input id="ed_boards" type="number" style="'+S+'" value="'+(rec.boards||0)+'"><label style="'+L+'">📐 Cell Size</label><select id="ed_cell" style="'+S+'"><option value="15mm"'+(rec.cellSize==='15mm'?' selected':'')+'>15mm</option><option value="21mm"'+(rec.cellSize==='21mm'?' selected':'')+'>21mm</option></select>';
+  } else if (key==='buffersMachineLog') {
+    title='✏ Buffer பஞ்சிங் திருத்து';
+    body='<label style="'+L+'">📅 தேதி (dd/mm/yyyy)</label><input id="ed_date" style="'+S+'" value="'+fmtD(rec.date||'')+'"><label style="'+L+'">📦 Buffer வகை</label><input id="ed_buftype" style="'+S+'" value="'+escH(rec.bufferType||rec.product||'')+'"><label style="'+L+'">🔢 Pcs Produced</label><input id="ed_pcs" type="number" style="'+S+'" value="'+(rec.pcsProduced||rec.todayMade||0)+'">';
+  }
+  gid('editModalTitle').textContent = title;
+  gid('editModalBody').innerHTML = body;
+  em.style.display='flex';
+}
+
+function closeEdit() {
+  var em = gid('editModal'); if(em) em.style.display='none';
+  _ek=''; _eid='';
+}
+
+function saveEdit() {
+  var data = getLS(_ek);
+  var idx  = data.findIndex(function(r){ return r.__id===_eid; });
+  if (idx<0) { toast('⚠ பதிவு கிடைக்கவில்லை!','#e74c3c'); return; }
+  var toISO = function(d){ if(!d) return ''; if(d.includes('-')) return d; var p=d.split('/'); return p.length===3?p[2]+'-'+p[1]+'-'+p[0]:d; };
+  var g = function(id){ var e=document.getElementById(id); return e?e.value.trim():''; };
+  if (_ek==='boardProductionLog') {
+    data[idx].date=toISO(g('ed_date')); data[idx].shift=g('ed_shift');
+    var b=parseFloat(g('ed_boards'))||0;
+    data[idx].boards=b; data[idx].boardsMade=b; data[idx].boardsProduced=b; data[idx].pcsProduced=b;
+    data[idx].cellSize=g('ed_cell');
+  } else if (_ek==='buffersMachineLog') {
+    data[idx].date=toISO(g('ed_date'));
+    data[idx].bufferType=g('ed_buftype'); data[idx].bufferName=g('ed_buftype'); data[idx].product=g('ed_buftype');
+    var p=parseFloat(g('ed_pcs'))||0; data[idx].pcsProduced=p; data[idx].todayMade=p;
+  }
+  data[idx]._editedAt=new Date().toISOString();
+  setLS(_ek, data);
+  closeEdit();
+  toast('✅ திருத்தம் சேமிக்கப்பட்டது!','#27ae60');
+  if (_ek==='boardProductionLog') loadBDHistory();
+  if (_ek==='buffersMachineLog') loadBUFHistory();
+}
+
+// ══════════════════════════
+// SEND TO CEO
+// ══════════════════════════
+var _lastFilename='';
+
+function sendToCEO() { _doSendToCEO(); }
+
+function _doSendToCEO() {
+  var today = (function(){ var d=new Date(); return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear(); })();
+  var todayISO = today.split('/').reverse().join('-');
+  var boards   = getLS('boardProductionLog');
+  var buffers  = getLS('buffersMachineLog');
+  var hcCore   = getLS('inventory').filter(function(r){ return r.category==='HC Core'; });
+  var dispatch = getLS('lwt_dispatchLog');
+  var total = boards.length+buffers.length+hcCore.length+dispatch.length;
+  if (total===0) { toast('⚠ பதிவுகள் இல்லை!','#e74c3c'); return; }
+  var payload = {
+    exportVersion:'2.0', exportDate:todayISO, exportDateDisp:today,
+    exportedAt:new Date().toISOString(), exportedBy:'LWT Entry App',
+    boards:boards, buffers:buffers, hcCore:hcCore, dispatch:dispatch
+  };
+  var json = JSON.stringify(payload, null, 2);
+  var blob = new Blob([json], {type:'application/json'});
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  _lastFilename = 'LWT_Data_'+todayISO+'.json';
+  a.href=url; a.download=_lastFilename; a.click();
+  URL.revokeObjectURL(url);
+  var msg = gid('sendModalMsg');
+  if (msg) msg.textContent = 'JSON downloaded. Share to CEO via WhatsApp.';
+  var sm = gid('sendModal'); if (sm) sm.style.display='flex';
+}
+
+function openWhatsApp() {
+  var msg = 'LWT ERP Data\nFile: '+_lastFilename+'\n\nPlease import into HoneyComb ERP.';
+  window.open('https://wa.me/917010324461?text='+encodeURIComponent(msg),'_blank');
+  toast('✅ WhatsApp திறக்கப்பட்டது!','#2980b9');
+}
+
+// ══════════════════════════
+// INIT
+// ══════════════════════════
+var _days = ['ஞாயிறு','திங்கள்','செவ்வாய்','புதன்','வியாழன்','வெள்ளி','சனி'];
+var _now  = new Date();
+var tb = gid('todayBadge');
+if (tb) {
+  var _dd=String(_now.getDate()).padStart(2,'0'), _mm=String(_now.getMonth()+1).padStart(2,'0'), _yyyy=_now.getFullYear();
+  tb.innerHTML = _dd+'/'+_mm+'/'+_yyyy+'<br><span style="font-size:0.6rem;color:#9a9070;">'+_days[_now.getDay()]+'</span>';
+}
+var _rList = gid('recentList');
+if (_rList) _rList.innerHTML = '<div style="color:#9a9070;font-size:0.72rem;">பதிவுகள் இல்லை</div>';
+</script>
+
+<!-- EDIT MODAL -->
+<div id="editModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:99997;align-items:center;justify-content:center;padding:16px;overflow-y:auto;">
+  <div style="background:#1a1810;border:2px solid #d4a017;border-radius:16px;padding:22px 20px;width:100%;max-width:380px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div id="editModalTitle" style="font-size:0.95rem;font-weight:800;color:#f0c842;font-family:Arial,sans-serif;"></div>
+      <button onclick="closeEdit()" style="background:none;border:none;color:#9a9070;font-size:1.3rem;cursor:pointer;">✕</button>
+    </div>
+    <div id="editModalBody"></div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button onclick="saveEdit()" style="flex:1;background:linear-gradient(145deg,#27ae60,#2ecc71);border:none;border-radius:10px;padding:13px;color:#fff;font-size:0.9rem;font-weight:800;cursor:pointer;">💾 சேமி</button>
+      <button onclick="closeEdit()" style="flex:0 0 72px;background:#1e1c13;border:1px solid #3a3620;border-radius:10px;padding:13px;color:#9a9070;font-size:0.85rem;cursor:pointer;">ரத்து</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
