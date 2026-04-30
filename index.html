@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>LWT Entry Screen</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { background: #0f0e0b; color: #e8e0c8; font-family: Arial, sans-serif; min-height: 100vh; }
+.header { background: #1a1810; border-bottom: 2px solid #d4a017; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
+.header-title { font-size: 1rem; font-weight: 800; color: #f0c842; }
+.header-date { font-size: 0.78rem; color: #f0c842; font-weight: 700; }
+.operator-bar { background: #1e1c10; border-bottom: 1px solid #3a3620; padding: 10px 16px; }
+.operator-bar label { font-size: 0.7rem; color: #d4a017; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 6px; }
+.operator-bar select { width: 100%; background: #252318; border: 1px solid #d4a017; color: #f0c842; padding: 10px; border-radius: 8px; font-size: 0.95rem; font-weight: 700; }
+.btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 20px 16px; }
+.main-btn { border: none; border-radius: 16px; padding: 26px 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.4); min-height: 130px; justify-content: center; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.btn-green  { background: linear-gradient(145deg,#1a6b3a,#27ae60); }
+.btn-pink   { background: linear-gradient(145deg,#8b2252,#e91e8c); }
+.btn-yellow { background: linear-gradient(145deg,#7a5c00,#d4a017); }
+.btn-blue   { background: linear-gradient(145deg,#1a4a7a,#2980b9); }
+.btn-icon { font-size: 2.2rem; }
+.btn-label { font-size: 0.95rem; font-weight: 800; color: #fff; text-align: center; line-height: 1.3; }
+.btn-sub { font-size: 0.6rem; color: rgba(255,255,255,0.75); text-align: center; }
+.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 999; overflow-y: auto; padding: 16px; }
+.modal.open { display: block; }
+.modal-box { background: #1a1810; border-radius: 16px; max-width: 500px; margin: 0 auto; overflow: hidden; }
+.modal-head { padding: 16px 18px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #3a3620; }
+.modal-title { font-size: 1rem; font-weight: 800; }
+.modal-close { background: #252318; border: 1px solid #3a3620; color: #e8e0c8; border-radius: 8px; padding: 8px 16px; font-size: 0.9rem; cursor: pointer; touch-action: manipulation; }
+.modal-body { padding: 16px; }
+.field-label { font-size: 0.8rem; color: #d4a017; font-weight: 700; text-transform: uppercase; margin-bottom: 6px; margin-top: 12px; display: block; }
+select, input[type=number], input[type=text] { width: 100%; background: #252318; border: 1px solid #3a3620; color: #e8e0c8; padding: 12px; border-radius: 8px; font-size: 1rem; outline: none; -webkit-appearance: none; appearance: none; }
+input[type=number].gold { border-color: #d4a017; color: #f0c842; font-size: 1.2rem; font-weight: 700; }
+.save-btn { width: 100%; padding: 18px; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: 800; cursor: pointer; margin-top: 16px; color: #fff; font-family: Arial, sans-serif; touch-action: manipulation; user-select: none; -webkit-user-select: none; display: block; }
+.save-green  { background: linear-gradient(135deg,#1a6b3a,#27ae60); }
+.save-pink   { background: linear-gradient(135deg,#8b2252,#e91e8c); }
+.save-yellow { background: linear-gradient(135deg,#7a5c00,#d4a017); }
+.save-blue   { background: linear-gradient(135deg,#1a4a7a,#2980b9); }
+.recent-section { padding: 0 16px 16px; }
+.recent-title { font-size: 0.62rem; color: #9a9070; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; font-weight: 700; }
+.recent-item { background: #1a1810; border: 1px solid #3a3620; border-radius: 8px; padding: 10px 12px; margin-bottom: 6px; font-size: 0.78rem; color: #c8b870; }
+.send-section { padding: 16px; }
+.send-btn { width: 100%; padding: 16px; background: linear-gradient(145deg,#1a5276,#2980b9); border: none; border-radius: 12px; color: #fff; font-size: 1rem; font-weight: 800; cursor: pointer; touch-action: manipulation; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
+.sync-btn { width: 100%; padding: 14px; background: linear-gradient(145deg,#1a4a1a,#27ae60); border: none; border-radius: 12px; color: #fff; font-size: 0.9rem; font-weight: 800; cursor: pointer; touch-action: manipulation; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.status-bar { background: #1e1c10; border: 1px solid #3a3620; border-radius: 8px; padding: 10px 14px; margin: 0 16px 16px; font-size: 0.75rem; color: #9a9070; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">🍯 LWT Entry</div>
+  <div class="header-date" id="headerDate"></div>
+</div>
+
+<div class="operator-bar">
+  <label>👤 யார் பதிவு செய்கிறார்? (Who is entering?)</label>
+  <select id="operatorName">
+    <option value="">-- தேர்வு செய்யவும் --</option>
+    <option value="Radha Reghu (Team Leader)">👩‍💼 Radha Reghu (Team Leader)</option>
+    <option value="Sunder (Technician)">🔧 Sunder (Technician)</option>
+    <option value="Honeycomb Martin (CEO)">👑 Honeycomb Martin (CEO)</option>
+  </select>
+</div>
+
+<div class="btn-grid">
+  <button class="main-btn btn-green" onclick="openM('hc')">
+    <span class="btn-icon">📦</span>
+    <span class="btn-label">HC Core வரவு</span>
+    <span class="btn-sub">கச்சா பொருள்</span>
+  </button>
+  <button class="main-btn btn-pink" onclick="openM('bd')">
+    <span class="btn-icon">🪵</span>
+    <span class="btn-label">Board உற்பத்தி</span>
+    <span class="btn-sub">தினசரி உற்பத்தி</span>
+  </button>
+  <button class="main-btn btn-yellow" onclick="openM('buf')">
+    <span class="btn-icon">📐</span>
+    <span class="btn-label">Buffer பஞ்சிங்</span>
+    <span class="btn-sub">இயந்திர உற்பத்தி</span>
+  </button>
+  <button class="main-btn btn-blue" onclick="openM('dsp')">
+    <span class="btn-icon">🚚</span>
+    <span class="btn-label">Dispatch அனுப்புதல்</span>
+    <span class="btn-sub">பொருள் வெளியேற்றம்</span>
+  </button>
+</div>
+
+<div class="status-bar" id="statusBar">Ready to sync</div>
+
+<div class="recent-section">
+  <div class="recent-title">கடைசியாக சேர்க்கப்பட்டவை</div>
+  <div id="recentList"><div class="recent-item">பதிவுகள் இல்லை</div></div>
+</div>
+
+<div class="send-section">
+  <button class="send-btn" onclick="sendToCEO()">
+    🚀 CEO-க்கு அனுப்பு — Send to CEO
+  </button>
+  <button class="sync-btn" onclick="syncToCloud()">
+    ☁️ Sync to Google Sheets
+  </button>
+</div>
+
+<!-- HC Core Modal -->
+<div class="modal" id="m-hc">
+  <div class="modal-box">
+    <div class="modal-head" style="border-top:4px solid #27ae60;">
+      <div class="modal-title" style="color:#27ae60;">📦 HC Core வரவு</div>
+      <button class="modal-close" onclick="closeM('hc')">✕ மூடு</button>
+    </div>
+    <div class="modal-body">
+      <label class="field-label">📅 தேதி</label>
+      <select id="hc-date"></select>
+      <label class="field-label">📏 Cell அளவு</label>
+      <select id="hc-cell">
+        <option value="">-- தேர்வு --</option>
+        <option value="15mm Cell">15mm Cell</option>
+        <option value="21mm Cell">21mm Cell</option>
+      </select>
+      <label class="field-label">📐 தடிமன் (Thickness)</label>
+      <select id="hc-thk">
+        <option value="">-- தேர்வு --</option>
+        <option value="15">15 mm</option>
+        <option value="20">20 mm</option>
+        <option value="25">25 mm</option>
+        <option value="30">30 mm</option>
+        <option value="35">35 mm</option>
+        <option value="40">40 mm</option>
+        <option value="50">50 mm</option>
+      </select>
+      <label class="field-label">📦 அளவு (RM)</label>
+      <input type="number" id="hc-qty" class="gold" placeholder="0.0" min="0" step="0.1">
+      <button class="save-btn save-green" onclick="saveHC()">✅ சேமி — HC Core வரவு</button>
+    </div>
+  </div>
+</div>
+
+<!-- Board Modal -->
+<div class="modal" id="m-bd">
+  <div class="modal-box">
+    <div class="modal-head" style="border-top:4px solid #e91e8c;">
+      <div class="modal-title" style="color:#e91e8c;">🪵 Board உற்பத்தி</div>
+      <button class="modal-close" onclick="closeM('bd')">✕ மூடு</button>
+    </div>
+    <div class="modal-body">
+      <label class="field-label">📅 தேதி</label>
+      <select id="bd-date"></select>
+      <label class="field-label">⏰ Shift</label>
+      <select id="bd-shift">
+        <option value="Shift 1 — Morning (9–1)">Shift 1 — காலை (9–1)</option>
+        <option value="Shift 2 — Afternoon (1:30–5:30)">Shift 2 — மதியம் (1:30–5:30)</option>
+      </select>
+      <label class="field-label">📏 Cell அளவு</label>
+      <select id="bd-cell">
+        <option value="15mm Cell — 3.3 RM/board">15mm Cell (3.3 RM/board)</option>
+        <option value="21mm Cell — 2.8 RM/board">21mm Cell (2.8 RM/board)</option>
+      </select>
+      <label class="field-label">📐 தடிமன் (mm)</label>
+      <input type="number" id="bd-thk" placeholder="mm">
+      <label class="field-label">🪵 Boards செய்தது</label>
+      <input type="number" id="bd-boards" class="gold" placeholder="எண்ணிக்கை" oninput="calcHC()">
+      <label class="field-label">🧮 HC Core பயன்படுத்தியது (RM)</label>
+      <input type="number" id="bd-hccore" readonly style="background:#0f0e0b;color:#f0c842;border-color:#d4a017;font-weight:800;">
+      <button class="save-btn save-pink" onclick="saveBD()">✅ சேமி — Board உற்பத்தி</button>
+    </div>
+  </div>
+</div>
+
+<!-- Buffer Modal -->
+<div class="modal" id="m-buf">
+  <div class="modal-box">
+    <div class="modal-head" style="border-top:4px solid #d4a017;">
+      <div class="modal-title" style="color:#d4a017;">📐 Buffer பஞ்சிங்</div>
+      <button class="modal-close" onclick="closeM('buf')">✕ மூடு</button>
+    </div>
+    <div class="modal-body">
+      <label class="field-label">📅 தேதி</label>
+      <select id="buf-date"></select>
+      <label class="field-label">⏰ Shift</label>
+      <select id="buf-shift">
+        <option value="Shift 1 — Morning (9–1)">Shift 1 — காலை (9–1)</option>
+        <option value="Shift 2 — Afternoon (1:30–5:30)">Shift 2 — மதியம் (1:30–5:30)</option>
+      </select>
+      <label class="field-label">📦 Buffer வகை</label>
+      <select id="buf-type">
+        <option value="">-- தேர்வு --</option>
+        <option value="Inner Buffer">Inner Buffer</option>
+        <option value="Top">Top</option>
+        <option value="Bottom">Bottom</option>
+        <option value="Corner">Corner</option>
+        <option value="Front & Back">Front & Back</option>
+        <option value="Front & Back 30MM">Front & Back 30MM</option>
+        <option value="Joompac">Joompac</option>
+      </select>
+      <label class="field-label">✅ செய்தது (Pcs)</label>
+      <input type="number" id="buf-qty" class="gold" placeholder="Pcs">
+      <button class="save-btn save-yellow" onclick="saveBUF()">✅ சேமி — Buffer பஞ்சிங்</button>
+    </div>
+  </div>
+</div>
+
+<!-- Dispatch Modal -->
+<div class="modal" id="m-dsp">
+  <div class="modal-box">
+    <div class="modal-head" style="border-top:4px solid #2980b9;">
+      <div class="modal-title" style="color:#2980b9;">🚚 Dispatch அனுப்புதல்</div>
+      <button class="modal-close" onclick="closeM('dsp')">✕ மூடு</button>
+    </div>
+    <div class="modal-body">
+      <label class="field-label">📅 தேதி</label>
+      <select id="dsp-date"></select>
+      <label class="field-label">🏢 வாடிக்கையாளர்</label>
+      <select id="dsp-customer">
+        <option value="">-- தேர்வு --</option>
+        <option value="Butterfly Gandhimathi">Butterfly Gandhimathi</option>
+        <option value="Stanadyne India">Stanadyne India</option>
+        <option value="Nefab India">Nefab India</option>
+        <option value="MGM Varvel Power">MGM Varvel Power</option>
+        <option value="Divine Foods">Divine Foods</option>
+        <option value="Poly Mak">Poly Mak</option>
+        <option value="KCIPL">KCIPL</option>
+        <option value="Agilitive">Agilitive</option>
+        <option value="Agrifacuture India">Agrifacuture India</option>
+      </select>
+      <label class="field-label">📦 Buffer வகை</label>
+      <select id="dsp-type">
+        <option value="">-- தேர்வு --</option>
+        <option value="Inner Buffer">Inner Buffer</option>
+        <option value="Top">Top</option>
+        <option value="Bottom">Bottom</option>
+        <option value="Corner">Corner</option>
+        <option value="Front & Back">Front & Back</option>
+        <option value="Front & Back 30MM">Front & Back 30MM</option>
+        <option value="Joompac">Joompac</option>
+      </select>
+      <label class="field-label">🔢 அளவு (Qty)</label>
+      <input type="number" id="dsp-qty" class="gold" placeholder="Pcs" oninput="calcDSP()">
+      <label class="field-label">💰 Rate / pc (₹)</label>
+      <input type="number" id="dsp-rate" placeholder="0.00" step="0.01" oninput="calcDSP()">
+      <label class="field-label">🧾 Invoice No. (optional)</label>
+      <input type="text" id="dsp-inv" placeholder="INV-001">
+      <div id="dsp-calc" style="background:#1e1c10;border:1px solid #3a3620;border-radius:8px;padding:12px;margin-top:12px;font-size:0.85rem;color:#c8b870;min-height:40px;"></div>
+      <button class="save-btn save-blue" onclick="saveDSP()">✅ சேமி — Dispatch</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── JSONBIN CONFIG ──
+var JSONBIN_KEY = '$2a$10$LWT_PLACEHOLDER_KEY';
+var BIN_ID = 'LWT_BIN_PLACEHOLDER';
+// Note: Using localStorage sync via cloud - free service
+
+function gid(id) { return document.getElementById(id); }
+function getLS(k) { try { return JSON.parse(localStorage.getItem(k)||'[]'); } catch(e){ return []; } }
+function setLS(k,v) { localStorage.setItem(k, JSON.stringify(v)); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+function todayISO() {
+  var t = new Date();
+  return t.getFullYear()+'-'+(String(t.getMonth()+1).padStart(2,'0'))+'-'+(String(t.getDate()).padStart(2,'0'));
+}
+function fmtDisp(iso) {
+  if (!iso) return '';
+  var p = iso.split('-');
+  return p[2]+'/'+p[1]+'/'+p[0];
+}
+function getLast3Dates() {
+  var dates = [];
+  var t = new Date();
+  for (var i=0; i<3; i++) {
+    var d = new Date(t);
+    d.setDate(t.getDate()-i);
+    var iso = d.getFullYear()+'-'+(String(d.getMonth()+1).padStart(2,'0'))+'-'+(String(d.getDate()).padStart(2,'0'));
+    dates.push(iso);
+  }
+  return dates;
+}
+function fillDateSelect(id) {
+  var sel = gid(id);
+  if (!sel) return;
+  sel.innerHTML = '';
+  var dates = getLast3Dates();
+  var labels = ['இன்று','நேற்று','முந்தைய'];
+  dates.forEach(function(iso, i) {
+    var opt = document.createElement('option');
+    opt.value = iso;
+    opt.text = labels[i]+' '+fmtDisp(iso);
+    if (i===0) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function setStatus(msg, color) {
+  var s = gid('statusBar');
+  s.textContent = msg;
+  s.style.color = color || '#9a9070';
+}
+
+function openM(name) {
+  fillDateSelect(name+'-date');
+  gid('m-'+name).classList.add('open');
+}
+function closeM(name) {
+  gid('m-'+name).classList.remove('open');
+}
+document.addEventListener('click', function(e) {
+  if (e.target && e.target.classList.contains('modal')) {
+    e.target.classList.remove('open');
+  }
+});
+
+gid('headerDate').textContent = fmtDisp(todayISO());
+
+// ── SAVE FUNCTIONS ──
+function checkOperator() {
+  var op = gid('operatorName').value;
+  if (!op) { alert('முதலில் பெயர் தேர்வு செய்யவும்!\nSelect your name first!'); return null; }
+  return op;
+}
+
+function saveHC() {
+  var op = checkOperator(); if (!op) return;
+  var date = gid('hc-date').value || todayISO();
+  var cell = gid('hc-cell').value;
+  var thk = gid('hc-thk').value;
+  var qty = parseFloat(gid('hc-qty').value)||0;
+  if (!cell) { alert('Cell அளவு தேர்வு செய்யவும்!'); return; }
+  if (qty<=0) { alert('அளவு உள்ளிடவும்!'); return; }
+  var inv = getLS('inventory');
+  inv.push({ __id:uid(), date:date, item:'HC Core', category:'HC Core', txnType:'Purchase IN',
+    cellSize:cell, thickness:thk, inQty:qty, outQty:0, balance:qty,
+    createdAt:new Date().toISOString(), createdBy:op });
+  setLS('inventory', inv);
+  alert('✅ சேமிக்கப்பட்டது!\nHC Core '+qty+' RM '+cell+'\n'+fmtDisp(date));
+  gid('hc-qty').value=''; gid('hc-cell').selectedIndex=0; gid('hc-thk').selectedIndex=0;
+  closeM('hc'); renderRecent();
+  autoSync();
+}
+
+function calcHC() {
+  var boards = parseFloat(gid('bd-boards').value)||0;
+  var cell = gid('bd-cell').value;
+  var rm = cell.includes('21mm') ? 2.8 : 3.3;
+  gid('bd-hccore').value = boards>0 ? (boards*rm).toFixed(1) : '';
+}
+
+function saveBD() {
+  var op = checkOperator(); if (!op) return;
+  var date = gid('bd-date').value || todayISO();
+  var shift = gid('bd-shift').value;
+  var cell = gid('bd-cell').value;
+  var thk = gid('bd-thk').value;
+  var boards = parseFloat(gid('bd-boards').value)||0;
+  var hc = parseFloat(gid('bd-hccore').value)||0;
+  if (boards<=0) { alert('Boards எண்ணிக்கை உள்ளிடவும்!'); return; }
+  var log = getLS('boardProductionLog');
+  log.push({ __id:uid(), date:date, shift:shift, cellSize:cell, thickness:thk,
+    boards:boards, hcCoreUsed:hc, createdAt:new Date().toISOString(), createdBy:op });
+  setLS('boardProductionLog', log);
+  alert('✅ சேமிக்கப்பட்டது!\nBoard '+boards+' pcs\n'+fmtDisp(date));
+  gid('bd-boards').value=''; gid('bd-thk').value=''; gid('bd-hccore').value='';
+  closeM('bd'); renderRecent();
+  autoSync();
+}
+
+function saveBUF() {
+  var op = checkOperator(); if (!op) return;
+  var date = gid('buf-date').value || todayISO();
+  var shift = gid('buf-shift').value;
+  var type = gid('buf-type').value;
+  var qty = parseFloat(gid('buf-qty').value)||0;
+  if (!type) { alert('Buffer வகை தேர்வு செய்யவும்!'); return; }
+  if (qty<=0) { alert('அளவு உள்ளிடவும்!'); return; }
+  var log = getLS('buffersMachineLog');
+  log.push({ __id:uid(), date:date, shift:shift, bufferType:type, bufferName:type,
+    pcsProduced:qty, todayMade:qty, createdAt:new Date().toISOString(), createdBy:op });
+  setLS('buffersMachineLog', log);
+  alert('✅ சேமிக்கப்பட்டது!\nBuffer '+type+' '+qty+' pcs\n'+fmtDisp(date));
+  gid('buf-qty').value=''; gid('buf-type').selectedIndex=0;
+  closeM('buf'); renderRecent();
+  autoSync();
+}
+
+function calcDSP() {
+  var qty = parseFloat(gid('dsp-qty').value)||0;
+  var rate = parseFloat(gid('dsp-rate').value)||0;
+  var tax = qty*rate;
+  var gst = tax*0.18;
+  var total = tax+gst;
+  if (qty>0) gid('dsp-calc').innerHTML = 'Taxable: ₹'+tax.toFixed(2)+' | GST 18%: ₹'+gst.toFixed(2)+' | <strong style="color:#f0c842;">Total: ₹'+total.toFixed(2)+'</strong>';
+}
+
+function saveDSP() {
+  var op = checkOperator(); if (!op) return;
+  var date = gid('dsp-date').value || todayISO();
+  var customer = gid('dsp-customer').value;
+  var type = gid('dsp-type').value;
+  var qty = parseFloat(gid('dsp-qty').value)||0;
+  var rate = parseFloat(gid('dsp-rate').value)||0;
+  var inv = gid('dsp-inv').value||'';
+  if (!customer) { alert('வாடிக்கையாளர் தேர்வு செய்யவும்!'); return; }
+  if (!type) { alert('Buffer வகை தேர்வு செய்யவும்!'); return; }
+  if (qty<=0) { alert('அளவு உள்ளிடவும்!'); return; }
+  var tax=qty*rate, gst=tax*0.18, total=tax+gst;
+  var log = getLS('lwt_dispatchLog');
+  log.push({ __id:uid(), dispatchDate:date, customer:customer, bufferName:type, bufferType:type,
+    qtyDispatched:qty, rate:rate, taxableAmount:tax, gstAmount:gst, grandTotal:total,
+    invoiceNumber:inv, vehicle:'', remarks:'', createdAt:new Date().toISOString(), createdBy:op });
+  setLS('lwt_dispatchLog', log);
+  alert('✅ Dispatch சேமிக்கப்பட்டது!\n'+customer+'\n'+type+' — '+qty+' pcs\nTotal: ₹'+total.toFixed(2));
+  gid('dsp-qty').value=''; gid('dsp-rate').value=''; gid('dsp-inv').value='';
+  gid('dsp-customer').selectedIndex=0; gid('dsp-type').selectedIndex=0; gid('dsp-calc').innerHTML='';
+  closeM('dsp'); renderRecent();
+  autoSync();
+}
+
+// ── RECENT ──
+function renderRecent() {
+  var items = [];
+  getLS('inventory').filter(function(r){return r.category==='HC Core';}).slice(-3).forEach(function(r){
+    items.push({t:'📦 HC Core '+r.inQty+' RM '+r.cellSize, d:r.date||''});});
+  getLS('boardProductionLog').slice(-3).forEach(function(r){
+    items.push({t:'🪵 Board '+r.boards+' pcs', d:r.date||''});});
+  getLS('buffersMachineLog').slice(-3).forEach(function(r){
+    items.push({t:'📐 '+r.bufferType+' '+r.pcsProduced+' pcs', d:r.date||''});});
+  getLS('lwt_dispatchLog').slice(-3).forEach(function(r){
+    items.push({t:'🚚 '+r.customer+' '+r.qtyDispatched+' pcs', d:r.dispatchDate||''});});
+  items.sort(function(a,b){return b.d.localeCompare(a.d);});
+  var html = items.length ? items.slice(0,8).map(function(i){
+    return '<div class="recent-item">'+i.t+' · '+fmtDisp(i.d)+'</div>';}).join('')
+    : '<div class="recent-item">பதிவுகள் இல்லை</div>';
+  gid('recentList').innerHTML = html;
+}
+
+// ── AUTO SYNC via JSONBin ──
+function buildPayload() {
+  var today = todayISO();
+  return {
+    exportVersion:'2.0', exportDate:today, exportDateDisp:fmtDisp(today),
+    exportedAt:new Date().toISOString(), exportedBy:'LWT Entry App',
+    boards: getLS('boardProductionLog'),
+    buffers: getLS('buffersMachineLog'),
+    hcCore: getLS('inventory').filter(function(r){return r.category==='HC Core';}),
+    dispatch: getLS('lwt_dispatchLog')
+  };
+}
+
+function autoSync() {
+  var binId = localStorage.getItem('lwt_bin_id');
+  if (!binId) { setStatus('☁️ Not synced yet — tap Auto Sync', '#f0c842'); return; }
+  setStatus('☁️ Syncing...', '#f0c842');
+  fetch('https://api.jsonbin.io/v3/b/'+binId, {
+    method:'PUT',
+    headers:{'Content-Type':'application/json','X-Master-Key':'$2a$10$W4vqT.MFxTZqNdyBJh7cYe6MYnfCuHAQMkC3y6J5i0VhDQyM5iNlm'},
+    body: JSON.stringify(buildPayload())
+  }).then(function(r){ return r.json(); }).then(function(){
+    setStatus('✅ Synced at '+new Date().toLocaleTimeString(), '#27ae60');
+  }).catch(function(){
+    setStatus('⚠️ Sync failed — use Send to CEO', '#e74c3c');
+  });
+}
+
+function syncToCloud() {
+  setStatus('☁️ Creating cloud sync...', '#f0c842');
+  var binId = localStorage.getItem('lwt_bin_id');
+  if (binId) { autoSync(); return; }
+  // Create new bin
+  fetch('https://api.jsonbin.io/v3/b', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-Master-Key':'$2a$10$W4vqT.MFxTZqNdyBJh7cYe6MYnfCuHAQMkC3y6J5i0VhDQyM5iNlm','X-Bin-Name':'LWT-ERP-Sync'},
+    body: JSON.stringify(buildPayload())
+  }).then(function(r){ return r.json(); }).then(function(data){
+    if (data.metadata && data.metadata.id) {
+      localStorage.setItem('lwt_bin_id', data.metadata.id);
+      setStatus('✅ Cloud sync created! Share Bin ID: '+data.metadata.id, '#27ae60');
+      alert('✅ Cloud Sync Setup Complete!\n\nBin ID: '+data.metadata.id+'\n\nShare this ID with your laptop ERP to auto-import!');
+    }
+  }).catch(function(e){
+    setStatus('⚠️ Cloud setup failed', '#e74c3c');
+    alert('Cloud sync failed. Use Send to CEO button instead.');
+  });
+}
+
+// ── SEND TO CEO (backup method) ──
+function sendToCEO() {
+  var payload = buildPayload();
+  var now = new Date();
+  var timeStr = String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0');
+  var filename = 'LWT_Data_'+payload.exportDate+'_'+timeStr+'.json';
+  var json = JSON.stringify(payload, null, 2);
+  var blob = new Blob([json], {type:'application/json'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setStatus('📥 '+filename+' downloaded!', '#2980b9');
+  alert('✅ File Ready!\n\nFilename: '+filename+'\n\nShare this file to CEO WhatsApp!\n\nBoards: '+payload.boards.length+'\nBuffers: '+payload.buffers.length+'\nHC Core: '+payload.hcCore.length+'\nDispatch: '+payload.dispatch.length);
+}
+
+renderRecent();
+</script>
+</body>
+</html>
