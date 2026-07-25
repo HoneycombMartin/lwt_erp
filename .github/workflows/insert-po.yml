@@ -1,0 +1,11 @@
+-- ═══════════════════════════════════════════════════════════
+-- AEROLINE — rate_master seed · PO 5200088991 · 06/07/2026
+-- Run in Supabase → SQL Editor. Safe to re-run.
+-- ═══════════════════════════════════════════════════════════
+insert into rate_master (customer, product, rate, gst_percent) values
+  ('Butterfly Gandhimathi', 'BOTTOM HC - AEROLINE',          6.11, 18),
+  ('Butterfly Gandhimathi', 'CORNER HC - AEROLINE',         10.87, 18),
+  ('Butterfly Gandhimathi', 'FRONT & BACK HC - AEROLINE',    4.55, 18),
+  ('Butterfly Gandhimathi', 'FRONT CORNER HC - AEROLINE 2B',12.47, 18),
+  ('Butterfly Gandhimathi', 'FRONT CORNER HC - AEROLINE 4B',18.42, 18)
+on conflict (customer, product) do nothing;
